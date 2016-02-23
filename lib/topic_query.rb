@@ -10,7 +10,7 @@ require_dependency 'topic_query_sql'
 class TopicQuery
 
   def create_list(filter, options={}, topics = nil)
-    if @user.admin
+    if @user.admin or filter == :private_messages
       topics ||= default_results(options)
       if ["activity","default"].include?(options[:order] || "activity") && !options[:unordered]
       	topics = prioritize_pinned_topics(topics, options)
@@ -28,9 +28,11 @@ class TopicQuery
   end
 
   def query_latest
+  	cat_id =  @options[:category_id]
+  	cat_condition = cat_id ?  " and topics.category_id = #{cat_id}" : ""
 		Topic.includes(:posts, :category).joins('left join users on topics.user_id = users.id 
 			left join notifications on topics.id = notifications.topic_id')
-			.where("(users.id=#{@user.id} or notifications.user_id=#{@user.id})")
+			.where("(users.id=#{@user.id} or notifications.user_id=#{@user.id}) #{cat_condition}")
 	end
 
 	def query_new
@@ -50,6 +52,16 @@ class TopicQuery
 		query_latest
 	end
 
+  def query_top
+  	score = "weekly_score"
+  	topics = Topic.includes(:posts, :category).joins('left join users on topics.user_id = users.id 
+  		left join notifications on topics.id = notifications.topic_id 
+  		inner join top_topics on topics.id = top_topics.topic_id')
+		  .where("(users.id=#{@user.id} or notifications.user_id=#{@user.id}) and top_topics.#{score} > 0")
+
+      topics.order(TopicQuerySQL.order_top_for(score))
+  end
+
 	def order_topics_by
 		order = ""
 		if @options[:order] == "category"
@@ -67,10 +79,11 @@ class TopicQuery
   protected
 
     def per_page_setting
-      @options[:slow_platform] ? 1 : 12
+      @options[:slow_platform] ? 15 : 30
     end
 
     def offset_topic
     	@options[:page].to_i * per_page_setting
     end
 end
+
