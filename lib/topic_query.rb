@@ -16,7 +16,7 @@ class TopicQuery
       	topics = prioritize_pinned_topics(topics, options)
       end 
 		  else
-        topics = send("query_#{filter}").order(order_topics_by).offset(offset_topic).limit(per_page_setting)
+        topics = send("query_#{filter}").distinct.order(order_topics_by).offset(offset_topic).limit(per_page_setting)
   	end
   	topics = topics.to_a.each do |t|
       t.allowed_user_ids = filter == :private_messages ? t.allowed_users.map{|u| u.id} : []
@@ -38,7 +38,7 @@ class TopicQuery
 	def query_new
 		Topic.includes(:posts, :category).joins('left join users on topics.user_id = users.id 
 			left join notifications on topics.id = notifications.topic_id')
-			.where("(users.id=#{@user.id} or notifications.user_id=#{@user.id}) and topics.created_at >= '#{(Time.now - 2).utc.to_s}'")
+			.where("(users.id=#{@user.id} or notifications.user_id=#{@user.id}) and topics.created_at >= '#{(Date.today - 2).to_datetime.utc.to_s}'")
 	end
 
 	def query_unread
@@ -86,4 +86,3 @@ class TopicQuery
     	@options[:page].to_i * per_page_setting
     end
 end
-
