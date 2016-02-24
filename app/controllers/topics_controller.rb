@@ -29,7 +29,7 @@ class TopicsController < ApplicationController
                                           :unsubscribe]
 
   before_filter :consider_user_for_promotion, only: :show
-  before_filter :check_permission
+  before_filter :check_permission, only: [:show, :update]
   skip_before_filter :check_xhr, only: [:show, :unsubscribe, :feed]
 
   def id_for_slug
@@ -565,9 +565,13 @@ class TopicsController < ApplicationController
   end
 
   def check_permission
-    notified = current_user.notifications.where(topic_id: params[:topic_id])
-    if current_user && (Topic.find(params[:topic_id]).user  != current_user  and !current_user.try(:admin) and notified.blank?)
-      redirect_to  "/404"
+    topic_id = params[:topic_id] ? params[:topic_id] : params[:id]
+    notified = current_user.notifications.where(topic_id: topic_id)
+    if topic_id
+      topic_user = Topic.find(topic_id).user 
+      if current_user && topic_id && (topic_user != current_user and !current_user.try(:admin) and notified.blank?)
+        redirect_to '/404'
+      end
     end
   end
 
