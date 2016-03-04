@@ -570,9 +570,10 @@ class TopicsController < ApplicationController
     if topic_id
       topic_user = Topic.find(topic_id).user 
       if current_user && topic_id && (topic_user != current_user and !current_user.try(:admin) and notified.blank?)
-        redirect_to '/404'
+        render :text => "You are not authorized to view this page"
       end
     end
   end
 
 end
+

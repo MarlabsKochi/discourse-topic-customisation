@@ -4,6 +4,8 @@
 # authors: Jijo Thomas(jijo1198), marlabskochi
 # url: https://github.com/MarlabsKochi/ldap-dll
 
+register_asset 'javascripts/script.js'
+
 after_initialize do
   require_dependency File.expand_path('../lib/topic_query.rb', __FILE__)
   require_dependency File.expand_path('../app/controllers/topics_controller.rb', __FILE__)
