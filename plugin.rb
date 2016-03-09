@@ -1,8 +1,8 @@
 # name: discourse-topics-customization
-# about: Uses omniauth-ldap gem for ladp login from local login UI
+# about: customizimg topics for normal user and admin
 # version: 1.0.0
 # authors: Jijo Thomas(jijo1198), marlabskochi
-# url: https://github.com/MarlabsKochi/ldap-dll
+# url: https://github.com/MarlabsKochi/discourse-topic-customisation.git
 
 register_asset 'javascripts/script.js'
 
