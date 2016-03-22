@@ -15,8 +15,10 @@ class TopicQuery
       if ["activity","default"].include?(options[:order] || "activity") && !options[:unordered]
       	topics = prioritize_pinned_topics(topics, options)
       end 
-		  else
-        topics = send("query_#{filter}").distinct.order(order_topics_by).offset(offset_topic).limit(per_page_setting)
+	  else
+        topics = send("query_#{filter}").distinct.order(order_topics_by)
+                                        .offset(offset_topic)
+                                        .limit(per_page_setting) rescue []
   	end
   	topics = topics.to_a.each do |t|
       t.allowed_user_ids = filter == :private_messages ? t.allowed_users.map{|u| u.id} : []
@@ -44,6 +46,7 @@ class TopicQuery
 	end
 
 	def query_unread
+		binding.pry
 		Topic.includes(:posts, :category).joins("inner join notifications on topics.id = notifications.topic_id")
 			.where("(notifications.user_id=#{@user.id} and topics.id not in 
 			(select topic_users.topic_id from topic_users inner join notifications on 
@@ -54,6 +57,10 @@ class TopicQuery
 
 	def query_suggested
 		query_latest
+	end
+
+	def query_user_topics
+	  query_latest
 	end
 
   def query_top
