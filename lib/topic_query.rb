@@ -32,7 +32,8 @@ class TopicQuery
   def query_latest
 		Topic.includes(:posts, :category).joins('left join users on topics.user_id = users.id 
 			left join notifications on topics.id = notifications.topic_id')
-			.where("(users.id=#{@user.id} or notifications.user_id=#{@user.id}) #{category_condition}")
+			.where("(users.id=#{@user.id} or notifications.user_id=#{@user.id}) 
+				and topics.archetype != 'private_message' #{category_condition}")
 	end
 
 	def query_new
@@ -40,19 +41,20 @@ class TopicQuery
 		Topic.includes(:posts, :category).joins('left join users on topics.user_id = users.id 
 			left join notifications on topics.id = notifications.topic_id')
 			.where("(users.id != #{@user.id} and notifications.user_id=#{@user.id})
-			and topics.created_at >= '#{new_since}' and 
-			topics.created_at >= '#{(Date.today - 2).to_datetime.utc.to_s}' 
-			#{category_condition}")
+			  and topics.created_at >= '#{new_since}' and 
+			  topics.created_at >= '#{(Date.today - 2).to_datetime.utc.to_s}' 
+			  and topics.archetype != 'private_message'
+			  #{category_condition}")
 	end
 
 	def query_unread
-		binding.pry
 		Topic.includes(:posts, :category).joins("inner join notifications on topics.id = notifications.topic_id")
 			.where("(notifications.user_id=#{@user.id} and topics.id not in 
-			(select topic_users.topic_id from topic_users inner join notifications on 
-			notifications.topic_id = topic_users.topic_id
-	    where topic_users.topic_id = notifications.topic_id and topic_users.user_id = #{@user.id}) 
-	    and notifications.user_id = #{@user.id}) #{category_condition}")  
+			  (select topic_users.topic_id from topic_users inner join notifications on 
+			  notifications.topic_id = topic_users.topic_id
+	      where topic_users.topic_id = notifications.topic_id and topic_users.user_id = #{@user.id}) 
+	      and notifications.user_id = #{@user.id}) and topics.archetype != 'private_message' 
+			  #{category_condition}")  
 	end
 
 	def query_suggested
@@ -104,4 +106,3 @@ class TopicQuery
     	@options[:page].to_i * per_page_setting
     end
 end
-
